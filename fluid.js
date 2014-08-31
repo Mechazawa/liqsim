@@ -160,7 +160,9 @@ FField.prototype = {
             }
 
             if (Mouse.buttons.right) {
-                this.dens_prev[this.IX(gridX, gridY)] = this.source;
+                for(var x = 6; x >= 0; x--)
+                    for(var y = 6; y >= 0; y--)
+                        this.dens_prev[this.IX(gridX - x, gridY - y + 4)] = this.source;
             }
         }
 
