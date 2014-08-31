@@ -178,7 +178,8 @@ FField.prototype = {
         for(var x = 0; x <= this.gridResolution; x++) {
             for(var y = 0; y <= this.gridResolution; y++) {
 
-                var d00 = this.dens[this.IX(x, this.gridResolution - y)] & 0xFF;
+                var d00 = this.dens[this.IX(x, this.gridResolution - y)];
+                d00 = Math.min(0xff, d00);
 
                 for(var x2 = 0; x2 < h; x2++) {
                     for(var y2 = 0; y2 < h; y2++) {
