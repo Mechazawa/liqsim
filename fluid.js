@@ -77,10 +77,15 @@ function FField(canvas, debug) {
     this.v_prev = Array.Generate(0, this.bufferSize);
     this.dens_prev = Array.Generate(0, this.bufferSize);
 
-    this.fpsStack = Array.Generate(this.dt, 100);
+    this.fpsStack = [];
 
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
+    this.pixelBuffer = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
+    for(var i = 0; i < this.pixelBuffer.length / 4; i++)
+        this.pixelBuffer.data[4 * i + 3] = 255;
+    this.pixelBufferData = this.pixelBuffer.data;
+    this.cwidth = this.canvas.width; // Caching
 
     var self = this;
     window.requestAnimFrame(function() {self.tick();});
@@ -90,8 +95,9 @@ FField.prototype = {
     tick: function(_dt) {
         var now = new Date().getTime();
         this.dt = typeof _dt !== "undefined" ? _dt : 0.1;
-        this.fpsStack.shift();
         this.fpsStack.push(1 / this.dt);
+        if(this.fpsStack.length > 50)
+            this.fpsStack.shift();
 
         this.update();
         this.draw();
@@ -183,27 +189,27 @@ FField.prototype = {
             for(var j = 0; j <= this.gridResolution; j++) {
                 var y = (j - 0.5) * h;
 
-                var d00 = this.getFillColor(this.dens[this.IX(i, j)]);
-                var d01 = this.getFillColor(this.dens[this.IX(i, j + 1)]);
-                var d10 = this.getFillColor(this.dens[this.IX(i + 1, j)]);
-                var d11 = this.getFillColor(this.dens[this.IX(i + 1, j + 1)]);
+                var d00 = this.dens[this.IX(i, j)];
+                //var d01 = this.dens[this.IX(i, j + 1)];
+                //var d10 = this.dens[this.IX(i + 1, j)];
+                //var d11 = this.dens[this.IX(i + 1, j + 1)];
 
-                this.drawPixel(d00, x, y);
-                this.drawPixel(d01, x, y + 1);
-                this.drawPixel(d10, x + 1, y);
-                this.drawPixel(d11, x + 1, y + 1);
+                this.drawPixel(d00, d00, d00, x, y);
+                //this.drawPixel(d01, d01, d01, x, y + 1);
+                //this.drawPixel(d10, d10, d10, x + 1, y);
+                //this.drawPixel(d11, d11, d11, x + 1, y + 1);
             }
         }
+
+        this.pixelBuffer.data = this.pixelBufferData;
+        this.context.putImageData(this.pixelBuffer, 0 ,0);
     },
 
-    drawPixel: function(style, x, y) {
-        this.context.fillStyle = style;
-        this.context.fillRect(x, y, 1, 1);
-    },
-
-    getFillColor: function(x, y) {
-        var d = this.dens[this.IX(x, y)];
-        return "rgb(" + d + ", " + d + ", " + d + ")";
+    drawPixel: function(r, g, b, x, y) {
+        var pos = 4 * ((x * this.cwidth) + y);
+        this.pixelBufferData.data[pos] = r; // RED
+        this.pixelBufferData.data[pos + 1] = g; // GREEN
+        this.pixelBufferData.data[pos + 2] = b; // BLUE
     },
 
     IX: function(x, y) {
