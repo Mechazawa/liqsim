@@ -124,15 +124,20 @@ FField.prototype = {
     },
 
     handleInput: function() {
-        this.mouse = Mouse.getRelativeTo(this.canvas);
+        var cMouse = {x: 0, y: 0};
+
+        cMouse = Mouse.getRelativeTo(this.canvas);
 
         // Lower boundary
-        this.mouse.x = Math.max(0, this.mouse.x);
-        this.mouse.y = Math.max(0, this.mouse.y);
+        cMouse.x = Math.max(0, this.mouse.x);
+        cMouse.y = Math.max(0, this.mouse.y);
 
         // Upper boundary
-        this.mouse.x = Math.min(this.canvas.width, this.mouse.x);
-        this.mouse.y = Math.min(this.canvas.height, this.mouse.y);
+        cMouse.x = Math.min(this.canvas.width, this.mouse.x);
+        cMouse.y = Math.min(this.canvas.height, this.mouse.y);
+
+        if(this.mouse.x == 0)
+            this.mouse = cMouse;
 
         var gridX = ((this.mouse.x / 512) * this.gridResolution + 1);
         var gridY = (((512 - this.mouse.y) / 512) * this.gridResolution + 1);
@@ -141,12 +146,15 @@ FField.prototype = {
             return;
 
         if(Mouse.buttons.left) {
-            //TODO
+            this.u[this.IX(gridX, gridY)] = this.force * (cMouse.x - this.mouse.x);
+            this.v[this.IX(gridX, gridY)] = this.force * (this.mouse.y - cMouse.y);
         }
 
         if(Mouse.buttons.right) {
-            //TODO
+            this.dens_prev[this.IX(gridX, gridY)] = this.source;
         }
+
+        this.mouse = cMouse;
     },
 
     velocityStep: function(){
@@ -160,5 +168,9 @@ FField.prototype = {
     draw: function() {
         this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
+    },
+
+    IX: function(x, y) {
+        return this.gridResPlus2 * y + x;
     }
 };
