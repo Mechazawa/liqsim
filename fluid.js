@@ -100,11 +100,18 @@ FField.prototype = {
             var fps = this.fpsStack.reduce(function(x, y){return x + y;}, 0) / this.fpsStack.length;
             fps = Math.round(fps * 10) / 10;
 
-            this.context.font = '18pt Arial';
-            this.context.fillStyle = 'black';
-            this.context.fillText("FPS: " + fps, 10, 25);
+            var fpsText = "FPS: " + fps;
+            var mouseText = "Mouse: X: " + this.mouse.x + "  Y: " + this.mouse.y;
 
-            this.context.fillText("Mouse: X: " + this.mouse.x + "  Y: " + this.mouse.y, 10 , 50);
+            this.context.font = '18pt Arial';
+            this.context.fillStyle = 'white';
+
+            this.context.lineWidth = 3;
+            this.context.strokeText(fpsText, 10, 25);
+            this.context.strokeText(mouseText, 10, 50);
+            this.context.lineWidth = 1;
+            this.context.fillText(fpsText, 10, 25);
+            this.context.fillText(mouseText, 10, 50);
         }
 
         var self = this;
@@ -166,8 +173,8 @@ FField.prototype = {
     },
 
     draw: function() {
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
+        this.context.fillStyle = 'black';
+        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
     },
 
     IX: function(x, y) {
