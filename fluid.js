@@ -81,6 +81,7 @@ function FField(canvas, debug) {
 
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
+    this.canvas.oncontextmenu = function (e) {e.preventDefault();};
     this.pixelBuffer = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
     for(var i = 0; i < this.pixelBuffer.length / 4; i++)
         this.pixelBuffer.data[4 * i + 3] = 255;
@@ -108,6 +109,8 @@ FField.prototype = {
 
             var fpsText = "FPS: " + fps;
             var mouseText = "Mouse: X: " + this.mouse.x + "  Y: " + this.mouse.y;
+            if(Mouse.buttons.left) mouseText += " L";
+            if(Mouse.buttons.right) mouseText += " R";
 
             this.context.font = '18pt Arial';
             this.context.fillStyle = 'white';
