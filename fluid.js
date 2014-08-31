@@ -224,27 +224,20 @@ FField.prototype = {
         var locB = b;
         var pCur = cur;
 
+        var iterations = locA === 0? 1 : 20;
+        for (var k = 0; k < iterations; k++)
         {
-            var iterations = 20;
-            if (locA == 0)
-                iterations = 1; // There's no point doing "c[i] = v * inverseC" 3*20 times over every frame...
-
-            for (var k = 0; k < iterations; k++)
-            {
-                // Every C compiler will do loop reversal if it can prove no data-dependencys. The current C# Jitter wont do this
-                for (var x = this.gridResolution; x > 0; --x)
-                for (var y = this.gridResolution; y > 0; --y)
-                {
-                    var i = Math.floor(this.IX(x, y));
-
+            // Every C compiler will do loop reversal if it can prove no data-dependencys. The current C# Jitter wont do this
+            for (var x = this.gridResolution; x > 0; --x) {
+                for (var y = this.gridResolution; y > 0; --y) {
+                    var i =this.IX(x, y);
                     var v = prev[i];
 
-                    if (locA != 0) // Extract this check by copying "for(int k..." and use one loop where this is checked and one where the check is missing
-                    {
+                    if (locA != 0) {
                         var s = pCur[i - 1] +
-                        pCur[i + 1] +
-                        pCur[i - this.gridResPlus2] +
-                        pCur[i + this.gridResPlus2];
+                            pCur[i + 1] +
+                            pCur[i - this.gridResPlus2] +
+                            pCur[i + this.gridResPlus2];
 
                         v += locA * s;
                     }
@@ -252,9 +245,10 @@ FField.prototype = {
                     pCur[i] = v * inverseC;
                 }
             }
-
-            this.setBnd(locB, cur);
         }
+
+        this.setBnd(locB, cur);
+
     },
 
     advect: function(b, current, prev, u, v) {
