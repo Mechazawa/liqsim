@@ -29,27 +29,29 @@ var Mouse = {
             x: Mouse.x - rect.left,
             y: Mouse.y - rect.top
         };
+    },
+
+    init: function() {
+        document.addEventListener('mousemove', function(evt){
+            Mouse.x = evt.clientX;
+            Mouse.y = evt.clientY;
+        }, false);
+
+        document.body.addEventListener('mousedown', function (e){
+            if(e.button === 0 || e.button === 1)
+                Mouse.buttons.left = true;
+            else if (e.button === 2)
+                Mouse.buttons.right = true;
+        }, false);
+
+        document.body.addEventListener('mouseup', function (e){
+            if(e.button === 0 || e.button === 1)
+                Mouse.buttons.left = false;
+            else if (e.button === 2)
+                Mouse.buttons.right = false;
+        }, false);
     }
 };
-
-document.addEventListener('mousemove', function(evt){
-    Mouse.x = evt.clientX;
-    Mouse.y = evt.clientY;
-}, false);
-
-document.body.addEventListener('mousedown', function (e){
-    if(e.button === 0 || e.button === 1)
-        Mouse.buttons.left = true;
-    else if (e.button === 2)
-        Mouse.buttons.right = true;
-}, false);
-
-document.body.addEventListener('mouseup', function (e){
-    if(e.button === 0 || e.button === 1)
-        Mouse.buttons.left = false;
-    else if (e.button === 2)
-        Mouse.buttons.right = false;
-}, false);
 
 
 
@@ -75,8 +77,7 @@ function FField(canvas, debug) {
     this.v_prev = Array.Generate(0, this.bufferSize);
     this.dens_prev = Array.Generate(0, this.bufferSize);
 
-    this.pmX = 0;
-    this.pmY = 0;
+    this.fpsStack = Array.Generate(this.dt, 100);
 
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
@@ -89,12 +90,15 @@ FField.prototype = {
     tick: function(_dt) {
         var now = new Date().getTime();
         this.dt = typeof _dt !== "undefined" ? _dt : 0.1;
+        this.fpsStack.shift();
+        this.fpsStack.push(1 / this.dt);
 
         this.update();
         this.draw();
 
         if(this.debug) {
-            var fps = Math.round(10 / this.dt) / 10;
+            var fps = this.fpsStack.reduce(function(x, y){return x + y;}, 0) / this.fpsStack.length;
+            fps = Math.round(fps * 10) / 10;
 
             this.context.font = '18pt Arial';
             this.context.fillStyle = 'black';
@@ -127,8 +131,8 @@ FField.prototype = {
         this.mouse.y = Math.max(0, this.mouse.y);
 
         // Upper boundary
-        this.mouse.x = Math.min(canvas.width, this.mouse.x);
-        this.mouse.y = Math.min(canvas.height, this.mouse.y);
+        this.mouse.x = Math.min(this.canvas.width, this.mouse.x);
+        this.mouse.y = Math.min(this.canvas.height, this.mouse.y);
 
         var gridX = ((this.mouse.x / 512) * this.gridResolution + 1);
         var gridY = (((512 - this.mouse.y) / 512) * this.gridResolution + 1);

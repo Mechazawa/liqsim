@@ -19,8 +19,12 @@
     </div>
 
     <script>
-        var canvas = document.getElementsByTagName('canvas')[0];
-        var simulator = new FField(canvas, true);
+        window.onload = function() {
+            Mouse.init();
+
+            var canvas = document.getElementsByTagName('canvas')[0];
+            var simulator = new FField(canvas, true);
+        }
     </script>
 </body>
 </html>
