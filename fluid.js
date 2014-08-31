@@ -258,7 +258,7 @@ FField.prototype = {
         var i0, j0, i1, j1;
         var x, y, s0, t0, s1, t1, dt0;
 
-        dt0 = dt * this.gridResolution;
+        dt0 = this.dt * this.gridResolution;
         for (var i = 1; i <= this.gridResolution; i++)
         {
             for (var j = 1; j <= this.gridResolution; j++)
@@ -335,10 +335,10 @@ FField.prototype = {
         this.addSource(this.dens, this.dens_prev);
 
         //swapBuffers(ref dens_prev, ref dens);
-        var z = this.dens_prev.copy(); this.dens_prev = this.dens.copy(); this.dens = z;
+        var z = this.dens_prev; this.dens_prev = this.dens; this.dens = z;
         this.diffuse(0, this.dens, this.dens_prev, this.diffusionRate);
 
-        z = this.dens_prev.copy(); this.dens_prev = this.dens.copy(); this.dens = z;
+        z = this.dens_prev; this.dens_prev = this.dens; this.dens = z;
         this.advect(0, this.dens, this.dens_prev, this.u, this.v);
     },
 
@@ -347,16 +347,16 @@ FField.prototype = {
         this.addSource(this.u, this.u_prev);
         this.addSource(this.v, this.v_prev);
 
-        var z = this.u_prev.copy(); this.u_prev = this.u.copy(); this.u = z;
+        var z = this.u_prev; this.u_prev = this.u; this.u = z;
         this.diffuse(1, this.u, this.u_prev, this.viscocity);
 
-        z = this.v_prev.copy(); this.v_prev = this.v.copy(); this.v = z;
+        z = this.v_prev; this.v_prev = this.v; this.v = z;
         this.diffuse(2, this.v, this.v_prev, this.viscocity);
 
         this.project();
 
-        z = this.u_prev.copy(); this.u_prev = this.u.copy(); this.u = z;
-        z = this.v_prev.copy(); this.v_prev = this.v.copy(); this.v = z;
+        z = this.u_prev; this.u_prev = this.u; this.u = z;
+        z = this.v_prev; this.v_prev = this.v; this.v = z;
 
         this.advect(1, this.u, this.u_prev, this.u_prev, this.v_prev);
         this.advect(2, this.v, this.v_prev, this.u_prev, this.v_prev);
