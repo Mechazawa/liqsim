@@ -61,7 +61,7 @@ function FField(canvas, debug) {
 
     this.gridResolution = 128;
     this.gridResPlus2 = this.gridResolution + 2;
-    this.bufferSize = (this.gridResolution + 2) * (this.gridResolution + 2);
+    this.bufferSize = this.gridResPlus2 * this.gridResPlus2;
     this.dt = 0.1;
     this.diffusionRate = 0.0;
     this.viscocity = 0.0;
@@ -140,34 +140,31 @@ FField.prototype = {
     },
 
     handleInput: function() {
-        var cMouse = {x: 0, y: 0};
-
-        cMouse = Mouse.getRelativeTo(this.canvas);
+        var cMouse = Mouse.getRelativeTo(this.canvas);
 
         // Lower boundary
-        cMouse.x = Math.max(0, this.mouse.x);
-        cMouse.y = Math.max(0, this.mouse.y);
+        cMouse.x = Math.max(0, cMouse.x);
+        cMouse.y = Math.max(0, cMouse.y);
 
         // Upper boundary
-        cMouse.x = Math.min(this.canvas.width, this.mouse.x);
-        cMouse.y = Math.min(this.canvas.height, this.mouse.y);
+        cMouse.x = Math.min(this.canvas.width, cMouse.x);
+        cMouse.y = Math.min(this.canvas.height, cMouse.y);
 
         if(this.mouse.x == 0)
             this.mouse = cMouse;
 
-        var gridX = ((this.mouse.x / 512) * this.gridResolution + 1);
-        var gridY = (((512 - this.mouse.y) / 512) * this.gridResolution + 1);
+        var gridX = Math.floor((this.mouse.x / 512) * this.gridResolution + 1);
+        var gridY = Math.floor(((512 - this.mouse.y) / 512) * this.gridResolution + 1);
 
-        if(gridX < 1 || gridX > this.gridResolution || gridY < 1 || gridY > this.gridResolution)
-            return;
+        if (!(gridX < 1 || gridX > this.gridResolution || gridY < 1 || gridY > this.gridResolution)) {
+            if (Mouse.buttons.left) {
+                this.u[this.IX(gridX, gridY)] = this.force * (cMouse.x - this.mouse.x);
+                this.v[this.IX(gridX, gridY)] = this.force * (this.mouse.y - cMouse.y);
+            }
 
-        if(Mouse.buttons.left) {
-            this.u[this.IX(gridX, gridY)] = this.force * (cMouse.x - this.mouse.x);
-            this.v[this.IX(gridX, gridY)] = this.force * (this.mouse.y - cMouse.y);
-        }
-
-        if(Mouse.buttons.right) {
-            this.dens_prev[this.IX(gridX, gridY)] = this.source;
+            if (Mouse.buttons.right) {
+                this.dens_prev[this.IX(gridX, gridY)] = this.source;
+            }
         }
 
         this.mouse = cMouse;
@@ -182,8 +179,6 @@ FField.prototype = {
     },
 
     draw: function() {
-        this.context.fillStyle = 'black';
-        this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
 
         var h = 1 / this.gridResolution;
 
@@ -192,15 +187,15 @@ FField.prototype = {
             for(var j = 0; j <= this.gridResolution; j++) {
                 var y = (j - 0.5) * h;
 
-                var d00 = this.dens[this.IX(i, j)];
+                var d00 =  Math.min(255, this.dens[this.IX(i, j)]);
                 //var d01 = this.dens[this.IX(i, j + 1)];
                 //var d10 = this.dens[this.IX(i + 1, j)];
                 //var d11 = this.dens[this.IX(i + 1, j + 1)];
 
-                this.drawPixel(d00, d00, d00, x, y);
-                //this.drawPixel(d01, d01, d01, x, y + 1);
-                //this.drawPixel(d10, d10, d10, x + 1, y);
-                //this.drawPixel(d11, d11, d11, x + 1, y + 1);
+                this.drawPixel(d00, x, y);
+                //this.drawPixel(d01, x, y + h);
+                //this.drawPixel(d10, x + h, y);
+                //this.drawPixel(d11, x + h, y + h);
             }
         }
 
@@ -209,11 +204,11 @@ FField.prototype = {
         this.context.putImageData(this.pixelBuffer, 0 ,0);
     },
 
-    drawPixel: function(r, g, b, x, y) {
+    drawPixel: function(d, x, y) {
         var pos = 4 * ((x * this.cwidth) + y);
-        this.pixelBufferData[pos] = r; // RED
-        this.pixelBufferData[pos + 1] = g; // GREEN
-        this.pixelBufferData[pos + 2] = b; // BLUE
+        this.pixelBufferData[pos] = dn; // RED
+        this.pixelBufferData[pos + 1] = dn; // GREEN
+        this.pixelBufferData[pos + 2] = dn; // BLUE
     },
 
     IX: function(x, y) {
