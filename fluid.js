@@ -201,15 +201,16 @@ FField.prototype = {
             }
         }
 
+        // DOM Hack
         this.pixelBuffer.data = this.pixelBufferData;
         this.context.putImageData(this.pixelBuffer, 0 ,0);
     },
 
     drawPixel: function(r, g, b, x, y) {
         var pos = 4 * ((x * this.cwidth) + y);
-        this.pixelBufferData.data[pos] = r; // RED
-        this.pixelBufferData.data[pos + 1] = g; // GREEN
-        this.pixelBufferData.data[pos + 2] = b; // BLUE
+        this.pixelBufferData[pos] = r; // RED
+        this.pixelBufferData[pos + 1] = g; // GREEN
+        this.pixelBufferData[pos + 2] = b; // BLUE
     },
 
     IX: function(x, y) {
