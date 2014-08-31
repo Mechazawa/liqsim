@@ -160,23 +160,15 @@ FField.prototype = {
             }
 
             if (Mouse.buttons.right) {
-                this.dens[this.IX(gridX, gridY)] = this.source;
+                this.dens_prev[this.IX(gridX, gridY)] = this.source;
             }
         }
 
         this.mouse = cMouse;
     },
 
-    velocityStep: function(){
-
-    },
-
-    densityStep: function() {
-
-    },
-
     draw: function() {
-        this.context.clearRect(0, 0, this.cwidth, this.cheight)
+        this.context.clearRect(0, 0, this.cwidth, this.cheight);
         var buffer = this.context.getImageData(0, 0, this.cwidth, this.cheight);
         var bufferData = buffer.data;
         var h = this.cwidth / this.gridResolution;
@@ -203,5 +195,177 @@ FField.prototype = {
 
     IX: function(x, y) {
         return this.gridResPlus2 * y + x;
+    },
+
+    setBnd: function(b, x) {
+        for (var i = 1; i <= this.gridResolution; i++)
+        {
+            x[this.IX(0, i)] = b == 1 ? -x[this.IX(1, i)] : x[this.IX(1, i)];
+            x[this.IX(this.gridResolution + 1, i)] = b == 1 ? -x[this.IX(this.gridResolution, i)] : x[this.IX(this.gridResolution, i)];
+            x[this.IX(i, 0)] = b == 2 ? -x[this.IX(i, 1)] : x[this.IX(i, 1)];
+            x[this.IX(i, this.gridResolution + 1)] = b == 2 ? -x[this.IX(i, this.gridResolution)] : x[this.IX(i, this.gridResolution)];
+        }
+        x[this.IX(0, 0)] = 0.5 * (x[this.IX(1, 0)] + x[this.IX(0, 1)]);
+        x[this.IX(0, this.gridResolution + 1)] = 0.5 * (x[this.IX(1, this.gridResolution + 1)] + x[this.IX(0, this.gridResolution)]);
+        x[this.IX(this.gridResolution + 1, 0)] = 0.5 * (x[this.IX(this.gridResolution, 0)] + x[this.IX(this.gridResolution + 1, 1)]);
+        x[this.IX(this.gridResolution + 1, this.gridResolution + 1)] = 0.5 * (x[this.IX(this.gridResolution, this.gridResolution + 1)] + x[this.IX(this.gridResolution + 1, this.gridResolution)]);
+
+        return x;
+    },
+
+    linearSolve: function(b, current, previous, a, div) {
+        var cur = current;
+        var prev = previous;
+        var inverseC = 1/div;
+        var locA = a;
+        var locB = b;
+        var pCur = cur;
+
+        {
+            var iterations = 20;
+            if (locA == 0)
+                iterations = 1; // There's no point doing "c[i] = v * inverseC" 3*20 times over every frame...
+
+            for (var k = 0; k < iterations; k++)
+            {
+                // Every C compiler will do loop reversal if it can prove no data-dependencys. The current C# Jitter wont do this
+                for (var x = this.gridResolution; x > 0; --x)
+                for (var y = this.gridResolution; y > 0; --y)
+                {
+                    var i = Math.floor(this.IX(x, y));
+
+                    var v = prev[i];
+
+                    if (locA != 0) // Extract this check by copying "for(int k..." and use one loop where this is checked and one where the check is missing
+                    {
+                        var s = pCur[i - 1] +
+                        pCur[i + 1] +
+                        pCur[i - this.gridResPlus2] +
+                        pCur[i + this.gridResPlus2];
+
+                        v += locA * s;
+                    }
+
+                    pCur[i] = v * inverseC;
+                }
+            }
+
+            this.setBnd(locB, cur);
+        }
+    },
+
+    advect: function(b, current, prev, u, v) {
+        var i0, j0, i1, j1;
+        var x, y, s0, t0, s1, t1, dt0;
+
+        dt0 = dt * this.gridResolution;
+        for (var i = 1; i <= this.gridResolution; i++)
+        {
+            for (var j = 1; j <= this.gridResolution; j++)
+            {
+                var ix1 = this.IX(i,j);
+
+                x = i - dt0 * u[ix1];
+                y = j - dt0 * v[ix1];
+
+                if (x < 0.5)
+                    x = 0.5;
+
+                if (x > this.gridResolution + 0.5)
+                    x = this.gridResolution + 0.5;
+
+                i0 = Math.floor(x);
+                i1 = i0 + 1;
+
+                if (y < 0.5)
+                    y = 0.5;
+
+                if (y > this.gridResolution + 0.5)
+                    y = this.gridResolution + 0.5;
+
+                j0 = Math.floor(y);
+                j1 = j0 + 1;
+                s1 = x - i0;
+                s0 = 1 - s1;
+                t1 = y - j0;
+                t0 = 1 - t1;
+
+                current[ix1] = s0 * (t0 * prev[this.IX(i0, j0)] + t1 * prev[this.IX(i0, j1)]) +
+                    s1 * (t0 * prev[this.IX(i1, j0)] + t1 * prev[this.IX(i1, j1)]);
+            }
+        }
+        this.setBnd(b, current);
+    },
+
+    diffuse: function(b, current, prev, rate) {
+        var a = this.dt * rate * this.gridResolution * this.gridResolution;
+        this.linearSolve(b, current, prev, a, 1 + 4 * a);
+    },
+
+    project: function() {
+        var i, j;
+
+        for (i = 1; i <= this.gridResolution; i++)
+        {
+            for (j = 1; j <= this.gridResolution; j++)
+            {
+                this.v_prev[this.IX(i, j)] = -0.5 * (this.u[this.IX(i + 1, j)] - this.u[this.IX(i - 1, j)] + this.v[this.IX(i, j + 1)] - this.v[this.IX(i, j - 1)]) / this.gridResolution;
+                this.u_prev[this.IX(i, j)] = 0;
+            }
+        }
+        this.setBnd(0, this.v_prev);
+        this.setBnd(0, this.u_prev);
+    
+        this.linearSolve(0, this.u_prev, this.v_prev, 1, 4);
+    
+        for (i = 1; i <= this.gridResolution; i++)
+        {
+            for (j = 1; j <= this.gridResolution; j++)
+            {
+                this.u[this.IX(i, j)] -= 0.5 * this.gridResolution * (this.u_prev[this.IX(i + 1, j)] - this.u_prev[this.IX(i - 1, j)]);
+                this.v[this.IX(i, j)] -= 0.5 * this.gridResolution * (this.u_prev[this.IX(i, j + 1)] - this.u_prev[this.IX(i, j - 1)]);
+            }
+        }
+    
+        this.setBnd(1, this.u);
+        this.setBnd(2, this.v);
+    },
+
+    densityStep: function() {
+        this.addSource(this.dens, this.dens_prev);
+
+        //swapBuffers(ref dens_prev, ref dens);
+        var z = this.dens_prev.copy(); this.dens_prev = this.dens.copy(); this.dens = z;
+        this.diffuse(0, this.dens, this.dens_prev, this.diffusionRate);
+
+        z = this.dens_prev.copy(); this.dens_prev = this.dens.copy(); this.dens = z;
+        this.advect(0, this.dens, this.dens_prev, this.u, this.v);
+    },
+
+    velocityStep: function() {
+        // N, u, v, u_prev, v_prev, visc, dt
+        this.addSource(this.u, this.u_prev);
+        this.addSource(this.v, this.v_prev);
+
+        var z = this.u_prev.copy(); this.u_prev = this.u.copy(); this.u = z;
+        this.diffuse(1, this.u, this.u_prev, this.viscocity);
+
+        z = this.v_prev.copy(); this.v_prev = this.v.copy(); this.v = z;
+        this.diffuse(2, this.v, this.v_prev, this.viscocity);
+
+        this.project();
+
+        z = this.u_prev.copy(); this.u_prev = this.u.copy(); this.u = z;
+        z = this.v_prev.copy(); this.v_prev = this.v.copy(); this.v = z;
+
+        this.advect(1, this.u, this.u_prev, this.u_prev, this.v_prev);
+        this.advect(2, this.v, this.v_prev, this.u_prev, this.v_prev);
+
+        this.project();
+    },
+
+    addSource: function(current, prev) {
+        for (var i = 0; i < this.bufferSize; i++)
+            current[i] += this.dt * prev[i];
     }
 };
