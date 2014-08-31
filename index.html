@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Liquid sim</title>
+    <style>
+        #container {
+            text-align: center;
+        }
+        canvas {
+            border: 2px solid darkgray;
+        }
+    </style>
+    <script src="fluid.js"></script>
+</head>
+<body>
+    <div id="container">
+        <canvas height="600" width="800"></canvas>
+    </div>
+
+    <script>
+        var canvas = document.getElementsByTagName('canvas')[0];
+        var simulator = new FField(canvas, true);
+    </script>
+</body>
+</html>

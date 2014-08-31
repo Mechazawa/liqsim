@@ -1,0 +1,160 @@
+window.requestAnimFrame = (function(){
+    return  window.requestAnimationFrame       ||
+            window.webkitRequestAnimationFrame ||
+            window.mozRequestAnimationFrame    ||
+            function( callback ){
+                window.setTimeout(callback, 1000 / 60);
+            };
+})();
+
+Array.Generate = function(val, size) {
+    var x = [];
+    while(x.length < size)
+        x.push(val);
+    return x;
+};
+
+var Mouse = {
+    x: 0,
+    y: 0,
+
+    buttons : {
+        left: false,
+        right: false
+    },
+
+    getRelativeTo: function(element) {
+        var rect = element.getBoundingClientRect();
+        return {
+            x: Mouse.x - rect.left,
+            y: Mouse.y - rect.top
+        };
+    }
+};
+
+document.addEventListener('mousemove', function(evt){
+    Mouse.x = evt.clientX;
+    Mouse.y = evt.clientY;
+}, false);
+
+document.body.addEventListener('mousedown', function (e){
+    if(e.button === 0 || e.button === 1)
+        Mouse.buttons.left = true;
+    else if (e.button === 2)
+        Mouse.buttons.right = true;
+}, false);
+
+document.body.addEventListener('mouseup', function (e){
+    if(e.button === 0 || e.button === 1)
+        Mouse.buttons.left = false;
+    else if (e.button === 2)
+        Mouse.buttons.right = false;
+}, false);
+
+
+
+
+function FField(canvas, debug) {
+    this.debug = debug || false;
+
+    this.gridResolution = 128;
+    this.gridResPlus2 = this.gridResolution + 2;
+    this.bufferSize = (this.gridResolution + 2) * (this.gridResolution + 2);
+    this.dt = 0.1;
+    this.diffusionRate = 0.0;
+    this.viscocity = 0.0;
+    this.force = 5.0; // scales the mouse movement that generate a force
+    this.source = 300.0; // amount of density that will be deposited
+    this.mouse = {x: 0, y: 0};
+
+    this.u = Array.Generate(0, this.bufferSize);
+    this.v = Array.Generate(0, this.bufferSize);
+    this.dens = Array.Generate(0, this.bufferSize);
+
+    this.u_prev = Array.Generate(0, this.bufferSize);
+    this.v_prev = Array.Generate(0, this.bufferSize);
+    this.dens_prev = Array.Generate(0, this.bufferSize);
+
+    this.pmX = 0;
+    this.pmY = 0;
+
+    this.canvas = canvas;
+    this.context = this.canvas.getContext('2d');
+
+    var self = this;
+    window.requestAnimFrame(function() {self.tick();});
+}
+
+FField.prototype = {
+    tick: function(_dt) {
+        var now = new Date().getTime();
+        this.dt = typeof _dt !== "undefined" ? _dt : 0.1;
+
+        this.update();
+        this.draw();
+
+        if(this.debug) {
+            var fps = Math.round(10 / this.dt) / 10;
+
+            this.context.font = '18pt Arial';
+            this.context.fillStyle = 'black';
+            this.context.fillText("FPS: " + fps, 10, 25);
+
+            this.context.fillText("Mouse: X: " + this.mouse.x + "  Y: " + this.mouse.y, 10 , 50);
+        }
+
+        var self = this;
+        window.requestAnimFrame(function() {
+            self.tick((new Date().getTime() - now) / 1000)
+        });
+    },
+
+    update: function () {
+        this.u_prev = Array.Generate(0, this.bufferSize);
+        this.v_prev = Array.Generate(0, this.bufferSize);
+        this.dens_prev = Array.Generate(0, this.bufferSize);
+
+        this.handleInput();
+        this.velocityStep();
+        this.densityStep();
+    },
+
+    handleInput: function() {
+        this.mouse = Mouse.getRelativeTo(this.canvas);
+
+        // Lower boundary
+        this.mouse.x = Math.max(0, this.mouse.x);
+        this.mouse.y = Math.max(0, this.mouse.y);
+
+        // Upper boundary
+        this.mouse.x = Math.min(canvas.width, this.mouse.x);
+        this.mouse.y = Math.min(canvas.height, this.mouse.y);
+
+        var gridX = ((this.mouse.x / 512) * this.gridResolution + 1);
+        var gridY = (((512 - this.mouse.y) / 512) * this.gridResolution + 1);
+
+        if(gridX < 1 || gridX > this.gridResolution || gridY < 1 || gridY > this.gridResolution)
+            return;
+
+        if(Mouse.buttons.left) {
+            //TODO
+        }
+
+        if(Mouse.buttons.right) {
+            //TODO
+        }
+    },
+
+    velocityStep: function(){
+
+    },
+
+    densityStep: function() {
+
+    },
+
+    draw: function() {
+        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+    }
+};
