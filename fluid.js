@@ -175,6 +175,35 @@ FField.prototype = {
     draw: function() {
         this.context.fillStyle = 'black';
         this.context.fillRect(0, 0, this.canvas.width, this.canvas.height);
+
+        var h = 1 / this.gridResolution;
+
+        for(var i = 0; i <= this.gridResolution; i++) {
+            var x = (i - 0.5) * h;
+            for(var j = 0; j <= this.gridResolution; j++) {
+                var y = (j - 0.5) * h;
+
+                var d00 = this.getFillColor(this.dens[this.IX(i, j)]);
+                var d01 = this.getFillColor(this.dens[this.IX(i, j + 1)]);
+                var d10 = this.getFillColor(this.dens[this.IX(i + 1, j)]);
+                var d11 = this.getFillColor(this.dens[this.IX(i + 1, j + 1)]);
+
+                this.drawPixel(d00, x, y);
+                this.drawPixel(d01, x, y + 1);
+                this.drawPixel(d10, x + 1, y);
+                this.drawPixel(d11, x + 1, y + 1);
+            }
+        }
+    },
+
+    drawPixel: function(style, x, y) {
+        this.context.fillStyle = style;
+        this.context.fillRect(x, y, 1, 1);
+    },
+
+    getFillColor: function(x, y) {
+        var d = this.dens[this.IX(x, y)];
+        return "rgb(" + d + ", " + d + ", " + d + ")";
     },
 
     IX: function(x, y) {
