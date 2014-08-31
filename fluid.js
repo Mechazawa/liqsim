@@ -82,11 +82,8 @@ function FField(canvas, debug) {
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
     this.canvas.oncontextmenu = function (e) {e.preventDefault();};
-    this.pixelBuffer = this.context.getImageData(0, 0, this.canvas.width, this.canvas.height);
-    for(var i = 0; i < this.pixelBuffer.length / 4; i++)
-        this.pixelBuffer.data[4 * i + 3] = 255;
-    this.pixelBufferData = this.pixelBuffer.data;
     this.cwidth = this.canvas.width; // Caching
+    this.cheight = this.canvas.height; // Caching
 
     var self = this;
     window.requestAnimFrame(function() {self.tick();});
@@ -163,7 +160,7 @@ FField.prototype = {
             }
 
             if (Mouse.buttons.right) {
-                this.dens_prev[this.IX(gridX, gridY)] = this.source;
+                this.dens[this.IX(gridX, gridY)] = this.source;
             }
         }
 
@@ -179,36 +176,29 @@ FField.prototype = {
     },
 
     draw: function() {
+        this.context.clearRect(0, 0, this.cwidth, this.cheight)
+        var buffer = this.context.getImageData(0, 0, this.cwidth, this.cheight);
+        var bufferData = buffer.data;
+        var h = this.cwidth / this.gridResolution;
 
-        var h = 1 / this.gridResolution;
+        for(var x = 0; x <= this.gridResolution; x++) {
+            for(var y = 0; y <= this.gridResolution; y++) {
 
-        for(var i = 0; i <= this.gridResolution; i++) {
-            var x = (i - 0.5) * h;
-            for(var j = 0; j <= this.gridResolution; j++) {
-                var y = (j - 0.5) * h;
+                var d00 = this.dens[this.IX(x, this.gridResolution - y)] & 0xFF;
 
-                var d00 =  Math.min(255, this.dens[this.IX(i, j)]);
-                //var d01 = this.dens[this.IX(i, j + 1)];
-                //var d10 = this.dens[this.IX(i + 1, j)];
-                //var d11 = this.dens[this.IX(i + 1, j + 1)];
-
-                this.drawPixel(d00, x, y);
-                //this.drawPixel(d01, x, y + h);
-                //this.drawPixel(d10, x + h, y);
-                //this.drawPixel(d11, x + h, y + h);
+                for(var x2 = 0; x2 < h; x2++) {
+                    for(var y2 = 0; y2 < h; y2++) {
+                        var index = ((h*y + y2) * this.cwidth + (h*x + x2)) * 4;
+                        bufferData[index] = d00; // RED
+                        bufferData[++index] = d00; // GREEN
+                        bufferData[++index] = d00; // BLUE
+                        bufferData[++index] = 255; // ALPHA
+                    }
+                }
             }
         }
 
-        // DOM Hack
-        this.pixelBuffer.data = this.pixelBufferData;
-        this.context.putImageData(this.pixelBuffer, 0 ,0);
-    },
-
-    drawPixel: function(d, x, y) {
-        var pos = 4 * ((x * this.cwidth) + y);
-        this.pixelBufferData[pos] = dn; // RED
-        this.pixelBufferData[pos + 1] = dn; // GREEN
-        this.pixelBufferData[pos + 2] = dn; // BLUE
+        this.context.putImageData(buffer, 0 ,0);
     },
 
     IX: function(x, y) {
