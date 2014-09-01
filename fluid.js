@@ -55,11 +55,11 @@ var Mouse = {
 
 
 
-
 function FField(canvas, debug) {
     this.debug = debug || false;
 
     this.gridResolution = 128;
+    this.gridResPlus1 =  this.gridResolution + 1;
     this.gridResPlus2 = this.gridResolution + 2;
     this.bufferSize = this.gridResPlus2 * this.gridResPlus2;
     this.dt = 0.1;
@@ -150,8 +150,8 @@ FField.prototype = {
         if(this.mouse.x == 0)
             this.mouse = cMouse;
 
-        var gridX = Math.floor((this.mouse.x / 512) * this.gridResolution + 1);
-        var gridY = Math.floor(((512 - this.mouse.y) / 512) * this.gridResolution + 1);
+        var gridX = Math.floor((this.mouse.x / 512) * this.gridResPlus1);
+        var gridY = Math.floor(((512 - this.mouse.y) / 512) * this.gridResPlus1);
 
         if (!(gridX < 1 || gridX > this.gridResolution || gridY < 1 || gridY > this.gridResolution)) {
             if (Mouse.buttons.left) {
@@ -205,18 +205,18 @@ FField.prototype = {
             var z = x[this.IX(1, i)];
             var y = x[this.IX(this.gridResolution, i)];
             x[this.IX(0, i)] = b == 1 ? -z : z;
-            x[this.IX(this.gridResolution + 1, i)] = b == 1 ? -y : y;
+            x[this.IX(this.gridResPlus1, i)] = b == 1 ? -y : y;
 
             z = x[this.IX(i, 1)];
             y = x[this.IX(i, this.gridResolution)];
             x[this.IX(i, 0)] = b == 2 ? -z : z;
-            x[this.IX(i, this.gridResolution + 1)] = b == 2 ? -y : y;
+            x[this.IX(i, this.gridResPlus1)] = b == 2 ? -y : y;
         }
 
         x[this.IX(0, 0)] = 0.5 * (x[this.IX(1, 0)] + x[this.IX(0, 1)]);
-        x[this.IX(0, this.gridResolution + 1)] = 0.5 * (x[this.IX(1, this.gridResolution + 1)] + x[this.IX(0, this.gridResolution)]);
-        x[this.IX(this.gridResolution + 1, 0)] = 0.5 * (x[this.IX(this.gridResolution, 0)] + x[this.IX(this.gridResolution + 1, 1)]);
-        x[this.IX(this.gridResolution + 1, this.gridResolution + 1)] = 0.5 * (x[this.IX(this.gridResolution, this.gridResolution + 1)] + x[this.IX(this.gridResolution + 1, this.gridResolution)]);
+        x[this.IX(0, this.gridResPlus1)] = 0.5 * (x[this.IX(1, this.gridResPlus1)] + x[this.IX(0, this.gridResolution)]);
+        x[this.IX(this.gridResPlus1, 0)] = 0.5 * (x[this.IX(this.gridResolution, 0)] + x[this.IX(this.gridResPlus1, 1)]);
+        x[this.IX(this.gridResPlus1, this.gridResPlus1)] = 0.5 * (x[this.IX(this.gridResolution, this.gridResPlus1)] + x[this.IX(this.gridResPlus1, this.gridResolution)]);
 
         return x;
     },
