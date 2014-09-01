@@ -91,6 +91,10 @@ function FField(canvas, resolution, debug) {
 }
 
 FField.prototype = {
+    stop: function() {
+        this.tick = function(_) { };
+    },
+
     tick: function(_dt) {
         var now = new Date().getTime();
         this.dt = typeof _dt !== "undefined" ? _dt : 0.1;
@@ -151,8 +155,8 @@ FField.prototype = {
         if(this.mouse.x == 0)
             this.mouse = cMouse;
 
-        var gridX = Math.floor((this.mouse.x / 512) * this.gridResPlus1);
-        var gridY = Math.floor(((512 - this.mouse.y) / 512) * this.gridResPlus1);
+        var gridX = Math.floor((this.mouse.x / this.cwidth) * this.gridResPlus1);
+        var gridY = Math.floor(((this.cheight - this.mouse.y) / this.cheight) * this.gridResPlus1); // TODO Fixme on non-square surfices
 
         if (!(gridX < 1 || gridX > this.gridResolution || gridY < 1 || gridY > this.gridResolution)) {
             if (Mouse.buttons.left) {

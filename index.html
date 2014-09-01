@@ -16,14 +16,38 @@
 <body>
     <div id="container">
         <canvas height="512" width="512"></canvas>
+        <br>
+        <label for="resolution">Resolution</label>
+        <select id="resolution">
+            <option value="2">2</option>
+            <option value="4">4</option>
+            <option value="8">8</option>
+            <option value="16">16</option>
+            <option value="32">32</option>
+            <option value="64">64</option>
+            <option value="128" selected="selected">128</option>
+            <option value="256">256</option>
+            <option value="512">512</option>
+            <option value="1024">1024</option>
+            <option value="2048">2048</option>
+            <option value="4096">4096</option>
+            <option value="8192">8192</option>
+        </select>
+        <button onclick="simulator.stop();start();">Restart</button>
     </div>
 
     <script>
+        var simulator;
         window.onload = function() {
             Mouse.init();
+            start(128);
+        };
 
+        function start() {
             var canvas = document.getElementsByTagName('canvas')[0];
-            var simulator = new FField(canvas, 128, true);
+            var sel = document.getElementById('resolution');
+            var resolution = parseInt(sel.options[sel.selectedIndex].value, 10);
+            simulator = new FField(canvas, resolution, true);
         }
     </script>
 </body>
