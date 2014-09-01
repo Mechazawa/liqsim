@@ -110,7 +110,9 @@ FField.prototype = {
             fps = Math.round(fps * 10) / 10;
 
             var fpsText = "FPS: " + fps;
-            var mouseText = "Mouse: X: " + this.mouse.x + "  Y: " + this.mouse.y;
+            var mouseText = "Mouse: " +
+                  "X: " + Math.floor(this.mouse.x) +
+                "  Y: " + Math.floor(this.mouse.y);
             if(Mouse.buttons.left) mouseText += " L";
             if(Mouse.buttons.right) mouseText += " R";
 
