@@ -55,10 +55,10 @@ var Mouse = {
 
 
 
-function FField(canvas, debug) {
+function FField(canvas, resolution, debug) {
     this.debug = debug || false;
 
-    this.gridResolution = 128;
+    this.gridResolution = resolution || 128;
     this.diffusionRate = 0.0;
     this.viscocity = 0.0;
     this.force = 5.0; // scales the mouse movement that generate a force
