@@ -201,13 +201,18 @@ FField.prototype = {
     },
 
     setBnd: function(b, x) {
-        for (var i = 1; i <= this.gridResolution; i++)
-        {
-            x[this.IX(0, i)] = b == 1 ? -x[this.IX(1, i)] : x[this.IX(1, i)];
-            x[this.IX(this.gridResolution + 1, i)] = b == 1 ? -x[this.IX(this.gridResolution, i)] : x[this.IX(this.gridResolution, i)];
-            x[this.IX(i, 0)] = b == 2 ? -x[this.IX(i, 1)] : x[this.IX(i, 1)];
-            x[this.IX(i, this.gridResolution + 1)] = b == 2 ? -x[this.IX(i, this.gridResolution)] : x[this.IX(i, this.gridResolution)];
+        for (var i = 1; i <= this.gridResolution; i++) {
+            var z = x[this.IX(1, i)];
+            var y = x[this.IX(this.gridResolution, i)];
+            x[this.IX(0, i)] = b == 1 ? -z : z;
+            x[this.IX(this.gridResolution + 1, i)] = b == 1 ? -y : y;
+
+            z = x[this.IX(i, 1)];
+            y = x[this.IX(i, this.gridResolution)];
+            x[this.IX(i, 0)] = b == 2 ? -z : z;
+            x[this.IX(i, this.gridResolution + 1)] = b == 2 ? -y : y;
         }
+
         x[this.IX(0, 0)] = 0.5 * (x[this.IX(1, 0)] + x[this.IX(0, 1)]);
         x[this.IX(0, this.gridResolution + 1)] = 0.5 * (x[this.IX(1, this.gridResolution + 1)] + x[this.IX(0, this.gridResolution)]);
         x[this.IX(this.gridResolution + 1, 0)] = 0.5 * (x[this.IX(this.gridResolution, 0)] + x[this.IX(this.gridResolution + 1, 1)]);
@@ -217,21 +222,17 @@ FField.prototype = {
     },
 
     linearSolve: function(b, current, previous, a, div) {
-        var cur = current;
-        var prev = previous;
         var inverseC = 1/div;
         var locA = a;
         var locB = b;
-        var pCur = cur;
+        var pCur = current;
 
         var iterations = locA === 0? 1 : 20;
-        for (var k = 0; k < iterations; k++)
-        {
-            // Every C compiler will do loop reversal if it can prove no data-dependencys. The current C# Jitter wont do this
+        for (var k = 0; k < iterations; k++)  {
             for (var x = this.gridResolution; x > 0; --x) {
                 for (var y = this.gridResolution; y > 0; --y) {
-                    var i =this.IX(x, y);
-                    var v = prev[i];
+                    var i = this.IX(x, y);
+                    var v = previous[i];
 
                     if (locA != 0) {
                         var s = pCur[i - 1] +
@@ -247,8 +248,7 @@ FField.prototype = {
             }
         }
 
-        this.setBnd(locB, cur);
-
+        this.setBnd(locB, current);
     },
 
     advect: function(b, current, prev, u, v) {
