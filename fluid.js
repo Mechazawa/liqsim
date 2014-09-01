@@ -59,15 +59,10 @@ function FField(canvas, debug) {
     this.debug = debug || false;
 
     this.gridResolution = 128;
-    this.gridResPlus1 =  this.gridResolution + 1;
-    this.gridResPlus2 = this.gridResolution + 2;
-    this.bufferSize = this.gridResPlus2 * this.gridResPlus2;
-    this.dt = 0.1;
     this.diffusionRate = 0.0;
     this.viscocity = 0.0;
     this.force = 5.0; // scales the mouse movement that generate a force
     this.source = 300.0; // amount of density that will be deposited
-    this.mouse = {x: 0, y: 0};
 
     this.u = Array.Generate(0, this.bufferSize);
     this.v = Array.Generate(0, this.bufferSize);
@@ -77,7 +72,13 @@ function FField(canvas, debug) {
     this.v_prev = Array.Generate(0, this.bufferSize);
     this.dens_prev = Array.Generate(0, this.bufferSize);
 
+    this.gridResPlus1 =  this.gridResolution + 1;
+    this.gridResPlus2 = this.gridResolution + 2;
+    this.bufferSize = this.gridResPlus2 * this.gridResPlus2;
+
     this.fpsStack = [];
+    this.mouse = {x: 0, y: 0};
+    this.dt = 0.1;
 
     this.canvas = canvas;
     this.context = this.canvas.getContext('2d');
