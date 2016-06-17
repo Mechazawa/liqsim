@@ -1,6 +1,6 @@
 liqsim
 ======
 
-Simple fluid simulation written in javascript. [Try it out!](https://rms.sexy/stuff/liqsim)
+Simple fluid simulation written in javascript. 
 
 ![screenshot](http://i.imgur.com/Bh3tRRS.png)
